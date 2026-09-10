@@ -32,6 +32,14 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.local.example
+
+# learner state and generated caches (data/verbs.json IS committed)
+/data/progress.json
+/data/examples.json
+
+# local machine settings
+.claude/settings.local.json
 
 # vercel
 .vercel

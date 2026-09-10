@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Deutsch Lehrer
 
-## Getting Started
+A local German tutor. Browse 1,000 verbs with their meaning and their use in past, present and future, then drill them with spaced repetition until all three tenses stick.
 
-First, run the development server:
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.local.example .env.local   # then paste a key from https://aistudio.google.com/apikey
+pnpm run check:model               # confirms the key and model work
+pnpm dev                           # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## The two halves
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Verbs** (`/verbs`) lists all 1,000, searchable in German or English and filterable by level. Opening one shows its full Präsens and Präteritum tables, its Partizip II with the right auxiliary, its Futur I, any preposition fixed to it, and three example sentences.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Practice** (`/`) schedules what you are weakest at. A verb card has two phases:
 
-## Learn More
+- **Study** shows the verb and all three tenses. You get it on a new verb and on any verb you just failed.
+- **Test** asks for the same verb in all three tenses. You pass only if all three are right; anything less lapses the card and brings the study side back.
 
-To learn more about Next.js, take a look at the following resources:
+Three modes: straight drill, explain-then-drill, and free conversation with inline corrections.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Where the German comes from
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This matters, because a model asked to conjugate 1,000 verbs will get participles wrong somewhere in the tail and nobody would catch it.
 
-## Deploy on Vercel
+| Part | Source |
+| --- | --- |
+| Every conjugated form | `german-verbs-dict`, a build-time dependency |
+| haben vs sein | `data/auxiliary.ts`, hand-written |
+| The core 201 verbs | `data/coreVerbs.ts`, hand-written |
+| Prepositions and their cases | `data/prepositions.ts`, `data/verbPrepositions.ts`, hand-written |
+| Verb list, glosses, levels | Generated once, validated against the dictionary |
+| Example sentences, exercises, marking | The model, with the correct forms supplied to it |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Two dictionary defects are corrected during generation. It ships pre-1996 orthography (`ich muß`, `du ißt`), and it omits the occasional person form. The orthography rewrite is done by the model and then verified mechanically: a correction is accepted only if it differs by ß/ss alone, so no stem can be silently altered.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts
+
+```bash
+pnpm run check:model   # is the API key working
+pnpm run gen:verbs     # regenerate data/verbs.json (~30 API requests)
+pnpm run check:data    # validate the verb data, prints warnings worth reading
+pnpm test              # spaced repetition tests
+```
+
+`pnpm run check:data` is worth running after any hand-edit. It flags duplicates, blank forms, participles that disagree with the dictionary, and verbs whose English gloss looks like motion but which were left on `haben`.
+
+## Swapping the model
+
+All provider choice lives in `lib/model.ts`. To move to Claude:
+
+```bash
+pnpm add @ai-sdk/anthropic
+```
+
+```ts
+import { anthropic } from '@ai-sdk/anthropic';
+export const model = anthropic(process.env.MODEL_ID ?? 'claude-sonnet-5');
+```
+
+Nothing else imports a provider. `MODEL_ID` in `.env.local` overrides the default without touching code.
+
+## Notes
+
+The Gemini free tier allows about 142 requests a day. A new verb costs three, a review costs two. Example sentences are generated once per verb and cached in `data/examples.json`, so browsing is free after the first visit.
+
+`data/progress.json` holds your learner state and is gitignored. Delete it to start over.

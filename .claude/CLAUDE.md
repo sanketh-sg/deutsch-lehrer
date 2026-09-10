@@ -65,5 +65,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
 ## Project-Specific Guidelines
+- Always brainstrom ideas and once I confirm then only build
+- Build in phases, and verify
 - Do not commit anything by yourself, I will do it.
 - run /ponytail:review before telling me to commit.
