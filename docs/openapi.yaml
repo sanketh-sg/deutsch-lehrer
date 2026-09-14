@@ -1,0 +1,354 @@
+openapi: 3.1.0
+info:
+  title: Deutsch Lehrer API
+  description: >
+    Local API for an A1-B2 German verb tutor: a spaced-repetition drill,
+    an AI grader, one-sentence tense examples per verb, and a free-form chat tutor.
+  version: 1.0.0
+servers:
+  - url: /api
+
+paths:
+  /exercise:
+    post:
+      summary: Get the next drill card
+      description: >
+        Loads the learner's spaced-repetition progress, picks the next due card,
+        and generates three English prompts (one per drill tense) for the learner
+        to translate. Returns `done: true` once no cards remain.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mode:
+                  type: string
+                  enum: [drill, chat, explain]
+                  default: drill
+      responses:
+        '200':
+          description: Next card, or completion.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ExerciseCard'
+                  - $ref: '#/components/schemas/ExerciseDone'
+        '500':
+          description: Internal data inconsistency (card references an unknown verb).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: The model provider failed to generate prompts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /grade:
+    post:
+      summary: Grade a drill attempt
+      description: >
+        Marks the learner's three answers against the prompts previously returned
+        by `/exercise`, updates the spaced-repetition card via SM-2, and persists it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cardId, prompts, answers]
+              properties:
+                cardId:
+                  type: string
+                  description: The card id returned by `/exercise`.
+                prompts:
+                  $ref: '#/components/schemas/Prompts'
+                answers:
+                  type: object
+                  description: One answer per drill tense.
+                  properties:
+                    praesens:
+                      type: string
+                    perfekt:
+                      type: string
+                    futur:
+                      type: string
+      responses:
+        '200':
+          description: Grading result and updated card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeResponse'
+        '400':
+          description: Missing cardId, prompts, or answers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: cardId references an unknown verb.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: The model provider failed to grade the attempt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /examples:
+    post:
+      summary: Get (or generate) the four-tense example sentence for a verb
+      description: >
+        Returns a cached one-sentence example, conjugated in all four tenses, for
+        the given verb. Generated and cached on first request per verb.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [infinitive]
+              properties:
+                infinitive:
+                  type: string
+                  description: The verb's infinitive form, e.g. "gehen".
+      responses:
+        '200':
+          description: Example sentence in all four tenses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Examples'
+        '400':
+          description: infinitive missing from the request body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: infinitive is not a known verb.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: The model provider failed to generate the example.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /chat:
+    post:
+      summary: Free-form chat with the German tutor
+      description: >
+        Streams a UI-message response from the tutor. The tutor replies with a
+        correction block followed by simple German, restricted to the learner's
+        drilled verb pool and case-correct prepositions. Uses the Vercel AI SDK
+        UI message stream protocol (`text/event-stream`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messages]
+              properties:
+                messages:
+                  type: array
+                  description: Vercel AI SDK UIMessage history.
+                  items:
+                    type: object
+      responses:
+        '200':
+          description: Streamed UI message response.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+components:
+  schemas:
+    Level:
+      type: string
+      enum: [A1, A2, B1, B2]
+
+    Verb:
+      type: object
+      properties:
+        rank:
+          type: integer
+        infinitive:
+          type: string
+        english:
+          type: string
+        level:
+          $ref: '#/components/schemas/Level'
+        aux:
+          type: string
+          enum: [haben, sein, both]
+        reflexive:
+          type: boolean
+        separable:
+          type: boolean
+        partizip:
+          type: string
+        praesens:
+          type: array
+          items:
+            type: string
+          description: ich, du, er/sie/es, wir, ihr, sie/Sie
+        praeteritum:
+          type: array
+          items:
+            type: string
+
+    Prompts:
+      type: object
+      description: One English sentence to translate per tense.
+      properties:
+        praesens:
+          type: string
+        perfekt:
+          type: string
+        futur:
+          type: string
+        lesson:
+          type: string
+          description: Grammar explanation, present only when mode is "explain".
+
+    Stats:
+      type: object
+      properties:
+        due:
+          type: integer
+        learned:
+          type: integer
+        pool:
+          type: integer
+
+    Card:
+      type: object
+      properties:
+        id:
+          type: string
+        reps:
+          type: integer
+        interval:
+          type: integer
+        ease:
+          type: number
+        due:
+          type: string
+          format: date
+        lapses:
+          type: integer
+        needsStudy:
+          type: boolean
+
+    ExerciseCard:
+      type: object
+      properties:
+        cardId:
+          type: string
+        phase:
+          type: string
+          enum: [study, test]
+        verb:
+          $ref: '#/components/schemas/Verb'
+        prompts:
+          $ref: '#/components/schemas/Prompts'
+        stats:
+          $ref: '#/components/schemas/Stats'
+
+    ExerciseDone:
+      type: object
+      properties:
+        done:
+          type: boolean
+          enum: [true]
+        stats:
+          $ref: '#/components/schemas/Stats'
+
+    ErrorType:
+      type: string
+      enum: [case, word-order, verb-form, auxiliary, preposition, gender, spelling, other]
+
+    GradeError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ErrorType'
+        wrong:
+          type: string
+        right:
+          type: string
+        explanation:
+          type: string
+
+    GradeItem:
+      type: object
+      properties:
+        tense:
+          type: string
+          enum: [praesens, perfekt, futur]
+        correct:
+          type: boolean
+        corrected:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeError'
+
+    GradeResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeItem'
+        note:
+          type: string
+        correctCount:
+          type: integer
+        passed:
+          type: boolean
+        card:
+          $ref: '#/components/schemas/Card'
+
+    Example:
+      type: object
+      properties:
+        de:
+          type: string
+        en:
+          type: string
+
+    Examples:
+      type: object
+      description: Same sentence rendered in all four tenses.
+      properties:
+        praesens:
+          $ref: '#/components/schemas/Example'
+        praeteritum:
+          $ref: '#/components/schemas/Example'
+        perfekt:
+          $ref: '#/components/schemas/Example'
+        futur:
+          $ref: '#/components/schemas/Example'
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
