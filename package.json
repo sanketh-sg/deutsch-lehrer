@@ -15,6 +15,7 @@
   "dependencies": {
     "@ai-sdk/google": "^4.0.67",
     "@ai-sdk/react": "^4.0.97",
+    "@upstash/redis": "^1.39.0",
     "ai": "^7.0.97",
     "next": "16.3.4",
     "react": "19.2.8",

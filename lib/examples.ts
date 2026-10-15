@@ -1,7 +1,7 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { generateText, Output } from 'ai';
 import { z } from 'zod';
 import { model } from './model';
+import { redis } from './redis';
 import { BY_INFINITIVE, isModal, type Verb } from './verbs';
 import { isCompleteExamples, type Examples } from './tenses';
 
@@ -14,16 +14,12 @@ import { isCompleteExamples, type Examples } from './tenses';
  * requests a day. The conjugated forms are handed to the model as ground truth
  * instead of being left to it.
  */
-const FILE = 'data/examples.json';
+const KEY = 'examples';
 
 type Cache = Record<string, Examples>;
 
-function read(): Cache {
-  try {
-    return JSON.parse(readFileSync(FILE, 'utf8')) as Cache;
-  } catch {
-    return {};
-  }
+async function read(): Promise<Cache> {
+  return (await redis.get<Cache>(KEY)) ?? {};
 }
 
 const line = (what: string) =>
@@ -40,7 +36,7 @@ const schema = z.object({
 });
 
 export async function examplesFor(infinitive: string): Promise<Examples> {
-  const cache = read();
+  const cache = await read();
   const hit = cache[infinitive];
   if (isCompleteExamples(hit)) return hit;
 
@@ -49,10 +45,9 @@ export async function examplesFor(infinitive: string): Promise<Examples> {
 
   const { output } = await generateText({ model, output: Output.object({ schema }), prompt: buildPrompt(verb) });
 
-  const fresh = read(); // re-read, another request may have written meanwhile
+  const fresh = await read(); // re-read, another request may have written meanwhile
   fresh[infinitive] = output;
-  mkdirSync('data', { recursive: true });
-  writeFileSync(FILE, JSON.stringify(fresh, null, 1) + '\n');
+  await redis.set(KEY, fresh);
   return output;
 }
 

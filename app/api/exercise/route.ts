@@ -8,7 +8,7 @@ import { providerError } from '@/lib/model';
 export async function POST(req: Request) {
   const { mode = 'drill' } = (await req.json().catch(() => ({}))) as { mode?: Mode };
 
-  const progress = load();
+  const progress = await load();
   const card = nextCard(progress);
   const stats = {
     due: dueCount(progress),

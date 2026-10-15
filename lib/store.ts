@@ -1,14 +1,14 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import type { Card } from './sm2';
+import { redis } from './redis';
 
 /**
- * Learner state. One file, rewritten whole on every answer.
+ * Learner state. One Redis key, rewritten whole on every answer.
  *
- * ponytail: whole-file rewrite, single learner assumed. A few hundred active
+ * ponytail: whole-blob rewrite, single learner assumed. A few hundred active
  * cards is nothing to serialise, and there is exactly one writer. Move to
- * SQLite only if this ever serves more than one person.
+ * per-card hashes only if this ever serves more than one person.
  */
-const FILE = 'data/progress.json';
+const KEY = 'progress';
 
 export interface Progress {
   cards: Record<string, Card>;
@@ -16,24 +16,17 @@ export interface Progress {
   pinned: string[];
 }
 
-const EMPTY: Progress = { cards: {}, pinned: [] };
-
-export function load(): Progress {
-  try {
-    const p = JSON.parse(readFileSync(FILE, 'utf8')) as Progress;
-    return { cards: p.cards ?? {}, pinned: p.pinned ?? [] };
-  } catch {
-    return { ...EMPTY };
-  }
+export async function load(): Promise<Progress> {
+  const p = await redis.get<Progress>(KEY);
+  return { cards: p?.cards ?? {}, pinned: p?.pinned ?? [] };
 }
 
-export function save(p: Progress): void {
-  mkdirSync('data', { recursive: true });
-  writeFileSync(FILE, JSON.stringify(p, null, 1) + '\n');
+export async function save(p: Progress): Promise<void> {
+  await redis.set(KEY, p);
 }
 
-export function putCard(card: Card): void {
-  const p = load();
+export async function putCard(card: Card): Promise<void> {
+  const p = await load();
   p.cards[card.id] = card;
-  save(p);
+  await save(p);
 }

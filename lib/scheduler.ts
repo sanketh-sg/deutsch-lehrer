@@ -1,6 +1,6 @@
 import { VERBS } from './verbs';
 import { newCard, today, type Card } from './sm2';
-import { load, type Progress } from './store';
+import type { Progress } from './store';
 
 /**
  * How many verbs are in the drill pool before anything is learned. All 1000
@@ -31,7 +31,7 @@ export function learnedCount(p: Progress): number {
  * next unseen verb from the pool. Returns null when the pool is exhausted and
  * nothing is due, which means the learner is done for the day.
  */
-export function nextCard(p: Progress = load(), now = today()): Card | null {
+export function nextCard(p: Progress, now = today()): Card | null {
   const due = Object.values(p.cards)
     .filter((c) => c.due <= now)
     .sort((a, b) => a.due.localeCompare(b.due) || a.id.localeCompare(b.id));

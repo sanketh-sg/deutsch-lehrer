@@ -31,9 +31,9 @@ export async function POST(req: Request) {
   const byTense = new Map(result.results.map((r) => [r.tense, r]));
   const correctCount = DRILL_TENSES.filter((t) => byTense.get(t)?.correct).length;
 
-  const existing = load().cards[cardId];
+  const existing = (await load()).cards[cardId];
   const card = review(existing ?? newCard(cardId), qualityFor(correctCount));
-  putCard(card);
+  await putCard(card);
 
   return NextResponse.json({ ...result, correctCount, passed: correctCount === DRILL_TENSES.length, card });
 }
