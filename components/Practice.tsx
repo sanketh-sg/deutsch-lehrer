@@ -209,7 +209,7 @@ export function Practice() {
                   if (e.key === 'Enter' && answeredAll && !busy) void submit();
                 }}
                 placeholder="auf Deutsch…"
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+                className="w-full rounded border border-slate-300 px-3 py-2 text-base sm:text-sm dark:border-slate-700 dark:bg-slate-900"
               />
             </div>
           ))}

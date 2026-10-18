@@ -47,7 +47,7 @@ const prepositionsFor = (v: Verb) =>
 function Conjugation({ label, forms }: { label: string; forms: string[] }) {
   return (
     <div>
-      <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</h4>
+      <h4 className="mb-1 min-h-8 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:min-h-0">{label}</h4>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
         {forms.map((f, i) => (
           <div key={i} className="contents">
@@ -109,7 +109,7 @@ export function VerbCard({
         </div>
       </header>
 
-      <section className="grid gap-5 sm:grid-cols-2">
+      <section className="grid grid-cols-2 gap-0 sm:gap-5">
         <Conjugation label="Präsens · present" forms={verb.praesens} />
         <Conjugation label="Präteritum · past (written)" forms={verb.praeteritum} />
       </section>

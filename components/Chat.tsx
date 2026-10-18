@@ -78,7 +78,7 @@ export function Chat() {
           onChange={(e) => setInput(e.target.value)}
           disabled={busy}
           placeholder="Schreib auf Deutsch…"
-          className="flex-1 rounded border border-slate-300 px-3 py-2 text-sm disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900"
+          className="flex-1 rounded border border-slate-300 px-3 py-2 text-base sm:text-sm disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900"
         />
         <button
           type="submit"
