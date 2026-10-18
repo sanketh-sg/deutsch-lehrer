@@ -6,6 +6,7 @@ import { useState } from 'react';
 const LINKS = [
   { href: '/', label: 'Practice' },
   { href: '/verbs', label: 'Verbs' },
+  { href: '/prepositions', label: 'Prepositions' },
 ];
 
 export function NavMenu() {

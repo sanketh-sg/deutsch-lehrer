@@ -60,7 +60,7 @@ export const VERB_PREPOSITIONS: VerbPreposition[] = [
   { verb: 'sich schützen', prep: 'vor', case: 'dativ', english: 'to protect oneself from', level: 'B1', example: { de: 'Schütze dich vor der Sonne.', en: 'Protect yourself from the sun.' } },
   { verb: 'Angst haben', prep: 'vor', case: 'dativ', english: 'to be afraid of', level: 'A2', example: { de: 'Ich habe Angst vor dem Hund.', en: 'I am afraid of the dog.' } },
   { verb: 'einladen', prep: 'zu', case: 'dativ', english: 'to invite to', level: 'A2', example: { de: 'Sie lädt mich zu ihrer Party ein.', en: 'She invites me to her party.' } },
-  { verb: 'gratulieren', prep: 'zu', case: 'dativ', english: 'to congratulate on', level: 'B1', example: { de: 'Ich gratuliere dir zum Geburtstag.', en: 'I congratulate you on your birthday.' } },
+  { verb: 'gratulieren', prep: 'zu', case: 'dativ', english: 'to congratulate on', level: 'B1', example: { de: 'Ich gratuliere dir zu deinem Geburtstag.', en: 'I congratulate you on your birthday.' } },
   { verb: 'sich bedanken', prep: 'für', case: 'akkusativ', english: 'to thank for', level: 'B1', example: { de: 'Ich bedanke mich für deine Hilfe.', en: 'I thank you for your help.' } },
   { verb: 'sich bemühen', prep: 'um', case: 'akkusativ', english: 'to make an effort for', level: 'B2', example: { de: 'Er bemüht sich um eine Lösung.', en: 'He is making an effort to find a solution.' } },
 ];
