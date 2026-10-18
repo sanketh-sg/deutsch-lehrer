@@ -75,7 +75,7 @@ export function VerbBrowser() {
 
   return (
     <div className="flex snap-x snap-mandatory overflow-x-hidden max-lg:h-[80dvh] max-lg:touch-pan-y lg:grid lg:grid-cols-[20rem_1fr] lg:gap-6 lg:overflow-visible">
-      <div ref={listPane} className="flex min-h-0 flex-col space-y-3 max-lg:w-full max-lg:shrink-0 max-lg:snap-start lg:block">
+      <div ref={listPane} className="flex min-h-0 flex-col space-y-3 max-lg:w-full max-lg:shrink-0 max-lg:snap-start max-lg:px-3 lg:block">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
