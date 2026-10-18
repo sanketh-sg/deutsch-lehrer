@@ -1,17 +1,25 @@
 # Deutsch Lehrer
 
-A local German tutor. Browse 1,000 verbs with their meaning and their use in past, present and future, then drill them with spaced repetition until all three tenses stick.
+A German tutor for one learner, usable on phone and laptop. Browse 1,000 verbs with their meaning and their use in past, present and future, then drill them with spaced repetition until all three tenses stick.
 
 ## Setup
 
 ```bash
 pnpm install
-cp .env.local.example .env.local   # then paste a key from https://aistudio.google.com/apikey
+cp .env.local.example .env.local   # then fill in the values below
 pnpm run check:model               # confirms the key and model work
 pnpm dev                           # http://localhost:3000
 ```
 
-## The two halves
+`.env.local` needs:
+
+| Variable | Purpose |
+| --- | --- |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini key from https://aistudio.google.com/apikey |
+| `APP_PASSWORD` | The whole app sits behind HTTP Basic Auth (any username). If unset, every request fails with 500 rather than leaving the AI endpoints open. |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis for learner state and cached examples. The Vercel Marketplace `KV_REST_API_*` pair also works. |
+
+## The three parts
 
 **Verbs** (`/verbs`) lists all 1,000, searchable in German or English and filterable by level. Opening one shows its full Präsens and Präteritum tables, its Partizip II with the right auxiliary, its Futur I, any preposition fixed to it, and three example sentences.
 
@@ -21,6 +29,10 @@ pnpm dev                           # http://localhost:3000
 - **Test** asks for the same verb in all three tenses. You pass only if all three are right; anything less lapses the card and brings the study side back.
 
 Three modes: straight drill, explain-then-drill, and free conversation with inline corrections.
+
+**Prepositions** (`/prepositions`) drills the verb + preposition pairs in `data/verbPrepositions.ts` as multiple choice. A miss goes to the back of the deck and comes round again; the session ends when every pair has been answered correctly.
+
+On a phone the navigation is a hamburger menu, and Verbs becomes two panes you swipe between.
 
 ## Where the German comes from
 
@@ -65,6 +77,8 @@ Nothing else imports a provider. `MODEL_ID` in `.env.local` overrides the defaul
 
 ## Notes
 
-The Gemini free tier allows about 142 requests a day. A new verb costs three, a review costs two. Example sentences are generated once per verb and cached in `data/examples.json`, so browsing is free after the first visit.
+The Gemini free tier allows about 142 requests a day. A new verb costs three, a review costs two. Example sentences are generated once per verb and cached in Redis, so browsing is free after the first visit.
 
-`data/progress.json` holds your learner state and is gitignored. Delete it to start over.
+Learner state is one Redis key (`lib/store.ts`) and cached examples are another (`lib/examples.ts`). Delete the keys in the Upstash console to start over.
+
+Deployed on Vercel; every push to `main` redeploys, README edits included.
