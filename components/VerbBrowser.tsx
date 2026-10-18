@@ -74,7 +74,7 @@ export function VerbBrowser() {
     });
 
   return (
-    <div className="flex snap-x snap-mandatory overflow-x-hidden max-lg:h-[80dvh] lg:grid lg:grid-cols-[20rem_1fr] lg:gap-6 lg:overflow-visible">
+    <div className="flex snap-x snap-mandatory overflow-x-hidden max-lg:h-[80dvh] max-lg:touch-pan-y lg:grid lg:grid-cols-[20rem_1fr] lg:gap-6 lg:overflow-visible">
       <div ref={listPane} className="flex min-h-0 flex-col space-y-3 max-lg:w-full max-lg:shrink-0 max-lg:snap-start lg:block">
         <input
           value={query}
@@ -126,7 +126,7 @@ export function VerbBrowser() {
         ref={detailPane}
         onTouchStart={(e) => (touchStart.current = [e.touches[0].clientX, e.touches[0].clientY])}
         onTouchEnd={swipe}
-        className="rounded border border-slate-200 p-5 max-lg:touch-pan-y max-lg:w-full max-lg:shrink-0 max-lg:snap-start max-lg:overflow-y-auto dark:border-slate-800"
+        className="rounded border border-slate-200 p-5 max-lg:touch-pan-y max-lg:w-full max-lg:shrink-0 max-lg:snap-start max-lg:overflow-x-hidden max-lg:overflow-y-auto dark:border-slate-800"
       >
         <div className="mb-3 flex items-center justify-between text-sm text-slate-500 lg:hidden">
           <span>{index >= 0 && `${index + 1} / ${results.length}`}</span>
